@@ -40,7 +40,85 @@ const products = [
     imageUrl: "https://api.dicebear.com/8.x/icons/svg?seed=Gaming%20Console",
   },
 ];
+
 const container = document.getElementById("product-container");
+const cartItemsContainer = document.getElementById("cart-items");
+const cartTotal = document.getElementById("cart-total");
+let cart = [];
+
+
+function updateCartTotal() {
+  const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  cartTotal.textContent = total.toFixed(2);
+}
+
+
+function renderCartItems() {
+  cartItemsContainer.innerHTML = "";
+  cart.forEach(item => {
+    const cartItem = document.createElement("div");
+    cartItem.innerHTML = `
+      <div>${item.name} - $${(item.price * item.quantity).toFixed(2)}</div>
+      <input type="number" min="1" value="${item.quantity}" data-name="${item.name}" class="quantity-input">
+      <button class="remove-btn" data-name="${item.name}">Remove</button>
+    `;
+    cartItemsContainer.appendChild(cartItem);
+  });
+
+  updateCartTotal();
+}
+
+
+function addToCart(name) {
+  const product = products.find(product => product.name === name);
+  if (product) {
+    const existingItemIndex = cart.findIndex(item => item.name === name);
+    if (existingItemIndex !== -1) {
+      cart[existingItemIndex].quantity++;
+    } else {
+      cart.push({ ...product, quantity: 1 });
+    }
+    renderCartItems();
+  }
+}
+
+
+function removeFromCart(name) {
+  const index = cart.findIndex(item => item.name === name);
+  if (index !== -1) {
+    cart.splice(index, 1);
+    renderCartItems();
+  }
+}
+
+container.addEventListener("click", event => {
+  if (event.target.classList.contains("add-to-cart-btn")) {
+    const productName = event.target.parentNode.querySelector("h2").textContent;
+    addToCart(productName);
+  }
+});
+
+
+cartItemsContainer.addEventListener("input", event => {
+  if (event.target.classList.contains("quantity-input")) {
+    const productName = event.target.dataset.name;
+    const newQuantity = parseInt(event.target.value);
+    const item = cart.find(item => item.name === productName);
+    if (item) {
+      item.quantity = newQuantity;
+      renderCartItems();
+    }
+  }
+});
+
+cartItemsContainer.addEventListener("click", event => {
+  if (event.target.classList.contains("remove-btn")) {
+    const productName = event.target.dataset.name;
+    removeFromCart(productName);
+  }
+});
+
+
 products.forEach((product) => {
   const productDiv = document.createElement("div");
   productDiv.classList.add("product");
@@ -76,11 +154,5 @@ products.forEach((product) => {
   productDiv.appendChild(infoDiv);
 
   container.appendChild(productDiv);
-  const cart = document.getElementById('cart')
-  button.onclick = function(){
 
-    cart.appendChild(name)
-    cart.appendChild(price)
-
-  }
 });
